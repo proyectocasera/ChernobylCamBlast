@@ -1,0 +1,265 @@
+run_program("/sbin/busybox", "mount", "/system");
+run_program("/sbin/busybox", "mount", "/data");
+
+ui_print("-- --- --- --- --- --- --- --");
+ui_print("--      Quantum v2.0       --");
+ui_print("--     by neXTerUltim      --");
+ui_print("-- --- --- --- --- --- --- --");
+
+delete("/system/etc/init.d/04kernel");
+delete("/system/etc/init.d/08mount");
+delete("/system/etc/init.d/09modules");
+delete("/system/etc/init.d/99cpu_thermal_limits");
+delete("/system/etc/init.d/99epen_config");
+delete("/system/etc/init.d/S91voltctrl");
+delete("/system/etc/init.d/S98bolt_siyah");
+delete("/system/etc/init.d/S_volt_scheduler");
+delete("/system/etc/init.d/16journal");
+delete("/system/etc/init.d/99nstools");
+delete("/system/etc/init.d/01zram-swap");
+delete("/system/etc/init.d/zzCrossBreeder");
+delete("/system/etc/init.d/06journal");
+delete("/system/etc/init.d/08mount");
+delete("/system/etc/init.d/98tweaks");
+delete("/system/etc/init.d/S90zipalign");
+delete("/system/etc/init.d/S70darky_zipalign");
+delete("/system/etc/init.d/99Pimp_my_Rom");
+delete("/system/etc/init.d/S97sqlite_optimize");
+delete("/system/etc/init.d/S99complete");
+delete("/system/etc/init.d/08setperm");
+delete("/system/etc/init.d/S78enable_touchscreen_1");
+delete("/system/etc/init.d/S30edt_perms");
+delete("/system/etc/init.d/S31edt_tweaks");
+delete("/system/etc/init.d/S72Drop_Caches");
+delete("/system/etc/init.d/S73Cleaner");
+delete("/system/etc/init.d/S74Tweaks");
+delete("/system/etc/init.d/S75More_Tweaks");
+delete("/system/etc/init.d/S99_calibration");
+delete("/system/etc/init.d/30enableloggers");
+delete("/system/etc/init.d/30resetfuelgaugenextboot");
+delete("/system/etc/init.d/01zram-swap");
+delete("/system/etc/init.d/10enableUMS");
+delete("/system/etc/init.d/10enableMTP");
+delete("/system/etc/init.d/11nbmod");
+delete("/system/etc/init.d/99elementalx");
+delete("/system/etc/init.d/99mpdecRenamer");
+delete("/system/etc/init.d/01mpdecision");
+delete("/system/etc/init.d/00start");
+delete("/system/etc/init.d/00banner");
+delete("/system/etc/elementalx.conf");
+delete_recursive("/system/etc/rngd");
+delete("/system/etc/init.d/Dash_Engine");
+delete("/system/etc/init.d/sysctl_tweaks"); 
+delete("/system/etc/init.d/03Dash_boot"); 
+delete("/system/etc/init.d/01Dash_battery"); 
+delete("/system/etc/init.d/04Dash_cache"); 
+delete("/system/etc/init.d/10Dash_touchscreen");
+delete("/system/etc/init.d/08Dash_sd"); 
+delete("/system/etc/init.d/02Dash_batteryceleb"); 
+delete("/system/etc/init.d/05Dash_cleaner"); 
+delete("/system/etc/init.d/06Dash_mainfree"); 
+delete("/system/etc/init.d/07Dash_netwroktweeks"); 
+delete("/system/etc/init.d/09Dash_sqlite_optimize"); 
+delete("/system/etc/init.d/11Dash_zipalign"); 
+delete("/system/etc/init.d/12Dash_zipaligndata");
+delete("/system/etc/init.d/09sdcardspeedfix");
+delete("/system/etc/init.d/10S_smoothness_tweak");
+delete("/system/etc/init.d/S98CFSD");
+delete("/system/etc/init.d/S98CFSE");
+delete("/system/etc/init.d/S98CFSF");
+delete("/system/etc/init.d/S98CFSG");
+delete("/system/etc/init.d/S98CFSH");
+delete("/system/etc/init.d/S98CFSI");
+delete("/system/etc/init.d/S98CFSJ");
+delete("/system/etc/init.d/S98CFSK");
+delete("/system/etc/init.d/S98CFSL");
+delete("/system/etc/init.d/S98CFSM");
+delete("/system/etc/init.d/S98CFS_1.9.1");
+delete("/system/etc/init.d/S98CFS_2.1.1.1");
+delete("/system/etc/init.d/S98CFS_1.9.4");
+delete("/system/etc/init.d/S98CFSStock");
+delete("/system/etc/init.d/S98CFS_1_9_1");
+delete("/system/etc/init.d/S98CFS_2_1_1_1");
+delete("/system/etc/init.d/S98CFS_1_9_4");
+delete("/system/etc/init.d/S99finish");
+delete("/system/etc/init.d/89system_tweak");
+delete("/system/etc/init.d/98fly_core");
+delete("/system/etc/init.d/90screenstate_scaling");
+delete("/system/etc/init.d/S97ramscript");
+delete("/system/etc/init.d/S97rambooster");
+delete("/system/etc/init.d/03sdcardspeedfix");
+delete("/system/etc/init.d/04kerneltweaks");
+delete("/system/etc/init.d/05sysctltweaks");
+delete("/system/etc/init.d/98KickAssKernel");
+delete("/system/etc/init.d/06tweaks");
+delete("/system/etc/init.d/S01edt_sysctl");
+delete("/system/etc/init.d/S98edt_tweaks");
+delete("/system/etc/init.d/s99acidext4tweak");
+delete("/system/etc/init.d/00remount");
+delete("/system/etc/init.d/02Transform");
+delete("/system/etc/init.d/01acid_sysctl");
+delete("/system/etc/init.d/03sdcardspeedfix");
+delete("/system/etc/init.d/04kerneltweaks");
+delete("/system/etc/init.d/05sysctltweaks");
+delete("/system/etc/init.d/S98CFSA");
+delete("/system/etc/init.d/S98CFSB");
+delete("/system/etc/init.d/nos_entropy_agg");
+delete("/system/etc/init.d/nos_entropy_light");
+delete("/system/etc/init.d/nos_entropy_mod");
+delete("/system/etc/init.d/prof_mod");
+delete("/system/etc/entropy/rngd_light");
+delete("/system/etc/entropy/rngd_moderate");
+delete("/system/etc/init.d/S98CFSC");
+delete("/system/etc/init.d/s78enable_touchscreen_stock");
+delete("/system/etc/init.d/s78enable_touchscreen_2");
+delete("/system/etc/init.d/net_buffer");
+delete("/system/etc/init.d/ram_optimize");
+delete("/system/etc/init.d/remount_fullext4");
+delete("/system/etc/init.d/ext4_lagfix");
+delete("/system/etc/init.d/05LagFixer");
+delete("/system/etc/init.d/S98system_tweak");
+delete("/system/etc/init.d/05Fly_engine");
+delete("/system/etc/init.d/Fly_engine");
+delete("/system/etc/init.d/08Fly_engine");
+delete("/system/etc/init.d/98system_tweak");
+delete("/system/etc/init.d/ram_optimize");
+delete("/system/etc/init.d/net_buffer");
+delete("/system/etc/init.d/velocity_system");
+delete("/system/etc/init.d/velocity_ram");
+delete("/system/etc/init.d/s78sensitive_touchscreen");
+delete("/system/etc/init.d/remountCM_fullext4");
+delete("/system/etc/init.d/02logdelete1");
+delete("/system/etc/init.d/04Governor_tweaks");
+delete("/system/etc/init.d/entropy");
+delete("/data/Fly-On/S08_rngd.log");
+delete("/data/Fly-On/rngd_state");
+delete("/system/etc/init.d/S98system_tweak");
+delete("/system/xbin/rngd");
+delete("/system/xbin/entro");
+delete("/system/bin/entropy");
+delete("/system/bin/nos_entropy");
+delete("/system/bin/seeder");
+delete_recursive("/system/etc/entropy");
+delete("/data/local/tmp/elementalx-kernel.log");
+delete_recursive("/system/etc/cron.d");
+delete_recursive("/system/lib/modules");
+delete("/system/bin/Dash");
+delete("/system/bin/undash");
+delete("/system/bin/Dash-M");
+delete("/system/etc/init.d/00_frandom");
+delete("/system/etc/init.d/01_ftrim");
+delete("/system/etc/init.d/02_disableboost");
+delete("/system/etc/init.d/04_sweep2sleep");
+delete("/system/etc/init.d/05_dirtyratio");
+delete("/system/etc/init.d/99linaro");
+delete("/system/etc/init.d/00_uber");
+delete("/system/etc/init.d/01_fstrim");
+delete("/system/etc/init.d/02_cpuboost");
+delete("/system/etc/init.d/03_cputweaks");
+delete("/system/etc/init.d/02_cpuboost");
+delete("/system/priv-app/NXTweaks.apk");
+delete("/system/priv-app/STweaks.apk");
+
+package_extract_dir("system", "/system");
+set_metadata("/system/xbin/busybox", "uid", 0, "gid", 0, "mode", 0755, "capabilities", 0x0, "selabel", "u:object_r:system_file:s0");
+symlink("busybox", "/system/xbin/[", "/system/xbin/[[",
+        "/system/xbin/adjtimex", "/system/xbin/arp", "/system/xbin/ash",
+        "/system/xbin/awk", "/system/xbin/base64", "/system/xbin/basename",
+        "/system/xbin/bbconfig", "/system/xbin/blkid", "/system/xbin/blockdev",
+        "/system/xbin/brctl", "/system/xbin/bunzip2", "/system/xbin/bzcat",
+        "/system/xbin/bzip2", "/system/xbin/cal", "/system/xbin/cat",
+        "/system/xbin/catv", "/system/xbin/chattr", "/system/xbin/chcon",
+        "/system/xbin/chgrp", "/system/xbin/chmod", "/system/xbin/chown",
+        "/system/xbin/chroot", "/system/xbin/chvt", "/system/xbin/clear",
+        "/system/xbin/cmp", "/system/xbin/comm", "/system/xbin/cp",
+        "/system/xbin/cpio", "/system/xbin/crond", "/system/xbin/crontab",
+        "/system/xbin/cut", "/system/xbin/date", "/system/xbin/dc",
+        "/system/xbin/dd", "/system/xbin/deallocvt", "/system/xbin/depmod",
+        "/system/xbin/devmem", "/system/xbin/df", "/system/xbin/diff",
+        "/system/xbin/dirname", "/system/xbin/dmesg", "/system/xbin/dnsd",
+        "/system/xbin/dos2unix", "/system/xbin/du", "/system/xbin/echo",
+        "/system/xbin/ed", "/system/xbin/egrep", "/system/xbin/env",
+        "/system/xbin/expand", "/system/xbin/expr", "/system/xbin/false",
+        "/system/xbin/fbsplash", "/system/xbin/fdisk", "/system/xbin/fgconsole",
+        "/system/xbin/fgrep", "/system/xbin/find", "/system/xbin/findfs",
+        "/system/xbin/flash_lock", "/system/xbin/flash_unlock",
+        "/system/xbin/flashcp", "/system/xbin/flock", "/system/xbin/fold",
+        "/system/xbin/free", "/system/xbin/freeramdisk", "/system/xbin/fstrim",
+        "/system/xbin/fsync", "/system/xbin/ftpget", "/system/xbin/ftpput",
+        "/system/xbin/fuser", "/system/xbin/getenforce", "/system/xbin/getopt",
+        "/system/xbin/getsebool", "/system/xbin/grep", "/system/xbin/groups",
+        "/system/xbin/gunzip", "/system/xbin/gzip", "/system/xbin/halt",
+        "/system/xbin/head", "/system/xbin/hexdump", "/system/xbin/hwclock",
+        "/system/xbin/id", "/system/xbin/ifconfig", "/system/xbin/inetd",
+        "/system/xbin/insmod", "/system/xbin/install", "/system/xbin/ionice",
+        "/system/xbin/iostat", "/system/xbin/ip", "/system/xbin/kill",
+        "/system/xbin/killall", "/system/xbin/killall5", "/system/xbin/less",
+        "/system/xbin/ln", "/system/xbin/losetup", "/system/xbin/ls",
+        "/system/xbin/lsattr", "/system/xbin/lsmod", "/system/xbin/lspci",
+        "/system/xbin/lsusb", "/system/xbin/lzcat", "/system/xbin/lzma",
+        "/system/xbin/lzop", "/system/xbin/lzopcat", "/system/xbin/man",
+        "/system/xbin/matchpathcon", "/system/xbin/md5sum", "/system/xbin/mesg",
+        "/system/xbin/mkdir", "/system/xbin/mke2fs", "/system/xbin/mkfifo",
+        "/system/xbin/mkfs.ext2", "/system/xbin/mkfs.vfat",
+        "/system/xbin/mknod", "/system/xbin/mkswap", "/system/xbin/mktemp",
+        "/system/xbin/modinfo", "/system/xbin/modprobe", "/system/xbin/more",
+        "/system/xbin/mount", "/system/xbin/mountpoint", "/system/xbin/mpstat",
+        "/system/xbin/mv", "/system/xbin/nanddump", "/system/xbin/nandwrite",
+        "/system/xbin/nbd-client", "/system/xbin/netstat", "/system/xbin/nice",
+        "/system/xbin/nmeter", "/system/xbin/nohup", "/system/xbin/nslookup",
+        "/system/xbin/ntpd", "/system/xbin/od", "/system/xbin/openvt",
+        "/system/xbin/patch", "/system/xbin/pgrep", "/system/xbin/pidof",
+        "/system/xbin/ping", "/system/xbin/pipe_progress", "/system/xbin/pkill",
+        "/system/xbin/pmap", "/system/xbin/poweroff", "/system/xbin/printenv",
+        "/system/xbin/printf", "/system/xbin/ps", "/system/xbin/pstree",
+        "/system/xbin/pwd", "/system/xbin/pwdx", "/system/xbin/rdate",
+        "/system/xbin/rdev", "/system/xbin/readlink", "/system/xbin/realpath",
+        "/system/xbin/renice", "/system/xbin/reset", "/system/xbin/resize",
+        "/system/xbin/restorecon", "/system/xbin/rev", "/system/xbin/rm",
+        "/system/xbin/rmdir", "/system/xbin/rmmod", "/system/xbin/route",
+        "/system/xbin/run-parts", "/system/xbin/runcon", "/system/xbin/rx",
+        "/system/xbin/sed", "/system/xbin/selinuxenabled", "/system/xbin/seq",
+        "/system/xbin/sestatus", "/system/xbin/setconsole",
+        "/system/xbin/setenforce", "/system/xbin/setfiles",
+        "/system/xbin/setkeycodes", "/system/xbin/setsebool",
+        "/system/xbin/setserial", "/system/xbin/setsid", "/system/xbin/sh",
+        "/system/xbin/sha1sum", "/system/xbin/sha256sum",
+        "/system/xbin/sha3sum", "/system/xbin/sha512sum", "/system/xbin/sleep",
+        "/system/xbin/smemcap", "/system/xbin/sort", "/system/xbin/split",
+        "/system/xbin/stat", "/system/xbin/strings", "/system/xbin/stty",
+        "/system/xbin/sum", "/system/xbin/swapoff", "/system/xbin/swapon",
+        "/system/xbin/sync", "/system/xbin/sysctl", "/system/xbin/tac",
+        "/system/xbin/tail", "/system/xbin/tar", "/system/xbin/taskset",
+        "/system/xbin/tee", "/system/xbin/telnet", "/system/xbin/telnetd",
+        "/system/xbin/test", "/system/xbin/tftp", "/system/xbin/tftpd",
+        "/system/xbin/time", "/system/xbin/timeout", "/system/xbin/top",
+        "/system/xbin/touch", "/system/xbin/tr", "/system/xbin/traceroute",
+        "/system/xbin/true", "/system/xbin/ttysize", "/system/xbin/tune2fs",
+        "/system/xbin/umount", "/system/xbin/uname", "/system/xbin/uncompress",
+        "/system/xbin/unexpand", "/system/xbin/uniq", "/system/xbin/unix2dos",
+        "/system/xbin/unlzma", "/system/xbin/unlzop", "/system/xbin/unxz",
+        "/system/xbin/unzip", "/system/xbin/uptime", "/system/xbin/usleep",
+        "/system/xbin/uudecode", "/system/xbin/uuencode", "/system/xbin/vi",
+        "/system/xbin/watch", "/system/xbin/wc", "/system/xbin/wget",
+        "/system/xbin/which", "/system/xbin/whoami", "/system/xbin/xargs",
+        "/system/xbin/xz", "/system/xbin/xzcat", "/system/xbin/yes",
+        "/system/xbin/zcat");
+
+set_metadata("/system/etc/init.d", "uid", 0, "gid", 2000, "dmode", 0755, "fmode", 0755, "capabilities", 0x0, "selabel", "u:object_r:system_file:s0");
+set_metadata_recursive("/system/xbin", "uid", 0, "gid", 2000, "dmode", 0755, "fmode", 0755, "capabilities", 0x0, "selabel", "u:object_r:system_file:s0");
+set_metadata("/system/xbin/busybox", "uid", 0, "gid", 0, "mode", 0755, "capabilities", 0x0, "selabel", "u:object_r:system_file:s0");
+
+package_extract_dir("additional", "/tmp/supersu");
+run_program("/sbin/busybox", "unzip", "/tmp/supersu/supersu.zip", "META-INF/com/google/android/*", "-d", "/tmp/supersu");
+run_program("/sbin/busybox", "sh", "/tmp/supersu/META-INF/com/google/android/update-binary", "dummy", "1", "/tmp/supersu/supersu.zip");
+
+package_extract_file("boot.img", "/dev/block/platform/msm_sdcc.1/by-name/boot");
+
+ui_print("-- --- --- --- --- --- --- --");
+ui_print("--     Till it's Over      --");
+ui_print("--      Nexus 5 4PDA       --");
+ui_print("-- --- --- --- --- --- --- --");
+
+set_progress(1.000000);
+run_program("/sbin/busybox", "umount", "/data");
+run_program("/sbin/busybox", "umount", "/system");
