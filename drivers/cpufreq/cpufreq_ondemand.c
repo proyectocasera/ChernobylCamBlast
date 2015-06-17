@@ -83,10 +83,10 @@ struct cpufreq_governor cpufreq_gov_ondemand = {
 enum {DBS_NORMAL_SAMPLE, DBS_SUB_SAMPLE};
 
 struct cpu_dbs_info_s {
-	cputime64_t prev_cpu_idle;
-	cputime64_t prev_cpu_iowait;
-	cputime64_t prev_cpu_wall;
-	cputime64_t prev_cpu_nice;
+	u64 prev_cpu_idle;
+	u64 prev_cpu_iowait;
+	u64 prev_cpu_wall;
+	u64 prev_cpu_nice;
 	struct cpufreq_policy *cur_policy;
 	struct delayed_work work;
 	struct cpufreq_frequency_table *freq_table;
@@ -145,16 +145,18 @@ static struct dbs_tuners {
 	int          powersave_bias;
 	unsigned int io_is_busy;
 } dbs_tuners_ins = {
-	.up_threshold_multi_core = DEF_FREQUENCY_UP_THRESHOLD,
-	.up_threshold = DEF_FREQUENCY_UP_THRESHOLD,
-	.sampling_down_factor = DEF_SAMPLING_DOWN_FACTOR,
-	.down_differential = DEF_FREQUENCY_DOWN_DIFFERENTIAL,
-	.down_differential_multi_core = MICRO_FREQUENCY_DOWN_DIFFERENTIAL,
-	.up_threshold_any_cpu_load = DEF_FREQUENCY_UP_THRESHOLD,
+	.up_threshold_multi_core = 60,
+	.up_threshold = 60,
+	.sampling_down_factor = 4,
+	.down_differential = 10,
+	.down_differential_multi_core = 3,
+	.up_threshold_any_cpu_load = 50,
 	.ignore_nice = 0,
 	.powersave_bias = 0,
-	.sync_freq = 0,
-	.optimal_freq = 0,
+	.sync_freq = 1958400,
+	.optimal_freq = 2265600,
+	.sampling_rate = 40000,
+	.io_is_busy = 1,
 };
 
 static inline u64 get_cpu_idle_time_jiffy(unsigned int cpu, u64 *wall)
@@ -374,7 +376,7 @@ static void update_sampling_rate(unsigned int new_rate)
 			cancel_delayed_work_sync(&dbs_info->work);
 			mutex_lock(&dbs_info->timer_mutex);
 
-			queue_delayed_work_on(dbs_info->cpu, dbs_wq,
+			mod_delayed_work_on(dbs_info->cpu, dbs_wq,
 				&dbs_info->work, usecs_to_jiffies(new_rate));
 
 		}
@@ -737,7 +739,7 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 
 	for_each_cpu(j, policy->cpus) {
 		struct cpu_dbs_info_s *j_dbs_info;
-		cputime64_t cur_wall_time, cur_idle_time, cur_iowait_time;
+		u64 cur_wall_time, cur_idle_time, cur_iowait_time;
 		unsigned int idle_time, wall_time, iowait_time;
 		unsigned int load_freq;
 		int freq_avg;
@@ -946,7 +948,7 @@ static void do_dbs_timer(struct work_struct *work)
 			dbs_info->freq_lo, CPUFREQ_RELATION_H);
 		delay = dbs_info->freq_lo_jiffies;
 	}
-	queue_delayed_work_on(cpu, dbs_wq, &dbs_info->work, delay);
+	mod_delayed_work_on(cpu, dbs_wq, &dbs_info->work, delay);
 	mutex_unlock(&dbs_info->timer_mutex);
 }
 
@@ -959,8 +961,8 @@ static inline void dbs_timer_init(struct cpu_dbs_info_s *dbs_info)
 		delay -= jiffies % delay;
 
 	dbs_info->sample_type = DBS_NORMAL_SAMPLE;
-	INIT_DELAYED_WORK_DEFERRABLE(&dbs_info->work, do_dbs_timer);
-	queue_delayed_work_on(dbs_info->cpu, dbs_wq, &dbs_info->work, delay);
+	INIT_DEFERRABLE_WORK(&dbs_info->work, do_dbs_timer);
+	mod_delayed_work_on(dbs_info->cpu, dbs_wq, &dbs_info->work, delay);
 }
 
 static inline void dbs_timer_exit(struct cpu_dbs_info_s *dbs_info)

@@ -146,6 +146,7 @@ extern void sched_update_nr_prod(int cpu, unsigned long nr, bool inc);
 extern void sched_get_nr_running_avg(int *avg, int *iowait_avg);
 
 extern void calc_global_load(unsigned long ticks);
+extern void update_cpu_load_nohz(void);
 
 extern unsigned long get_parent_ip(unsigned long addr);
 
@@ -193,9 +194,10 @@ print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq)
 #define TASK_DEAD		64
 #define TASK_WAKEKILL		128
 #define TASK_WAKING		256
-#define TASK_STATE_MAX		512
+#define TASK_PARKED		512
+#define TASK_STATE_MAX		1024
 
-#define TASK_STATE_TO_CHAR_STR "RSDTtZXxKW"
+#define TASK_STATE_TO_CHAR_STR "RSDTtZXxKWP"
 
 extern char ___assert_task_state[1 - 2*!!(
 		sizeof(TASK_STATE_TO_CHAR_STR)-1 != ilog2(TASK_STATE_MAX)+1)];
@@ -273,11 +275,11 @@ extern void init_idle_bootup_task(struct task_struct *idle);
 extern int runqueue_is_locked(int cpu);
 
 #if defined(CONFIG_SMP) && defined(CONFIG_NO_HZ)
-extern void select_nohz_load_balancer(int stop_tick);
+extern void nohz_balance_enter_idle(int cpu);
 extern void set_cpu_sd_state_idle(void);
 extern int get_nohz_timer_target(void);
 #else
-static inline void select_nohz_load_balancer(int stop_tick) { }
+static inline void nohz_balance_enter_idle(int cpu) { }
 static inline void set_cpu_sd_state_idle(void) { }
 #endif
 
@@ -363,7 +365,6 @@ extern signed long schedule_timeout_killable(signed long timeout);
 extern signed long schedule_timeout_uninterruptible(signed long timeout);
 asmlinkage void schedule(void);
 extern void schedule_preempt_disabled(void);
-extern int mutex_spin_on_owner(struct mutex *lock, struct task_struct *owner);
 
 struct nsproxy;
 struct user_namespace;
@@ -1207,6 +1208,32 @@ struct sched_statistics {
 };
 #endif
 
+#define RAVG_HIST_SIZE  5
+
+/* ravg represents frequency scaled cpu-demand of tasks */
+struct ravg {
+	/*
+	 * 'window_start' marks the beginning of new window
+	 *
+	 * 'mark_start' marks the beginning of an event (task waking up, task
+	 * starting to execute, task being preempted) within a window
+	 *
+	 * 'sum' represents how runnable a task has been within current
+	 * window. It incorporates both running time and wait time and is
+	 * frequency scaled.
+	 *
+	 * 'sum_history' keeps track of history of 'sum' seen over previous
+	 * RAVG_HIST_SIZE windows. Windows where task was entirely sleeping are
+	 * ignored.
+	 *
+	 * 'demand' represents maximum sum seen over previous RAVG_HIST_SIZE
+	 * windows. 'demand' could drive frequency demand for tasks.
+	 */
+	u64 window_start, mark_start;
+	u32 sum, demand;
+	u32 sum_history[RAVG_HIST_SIZE];
+};
+
 struct sched_entity {
 	struct load_weight	load;		/* for load-balancing */
 	struct rb_node		run_node;
@@ -1236,6 +1263,7 @@ struct sched_entity {
 struct sched_rt_entity {
 	struct list_head run_list;
 	unsigned long timeout;
+	unsigned long watchdog_stamp;
 	unsigned int time_slice;
 	int nr_cpus_allowed;
 
@@ -1270,10 +1298,14 @@ struct task_struct {
 	atomic_t usage;
 	unsigned int flags;	/* per process flags, defined below */
 	unsigned int ptrace;
+	unsigned int yield_count;
 
 #ifdef CONFIG_SMP
 	struct llist_node wake_entry;
 	int on_cpu;
+	struct task_struct *last_wakee;
+	unsigned long wakee_flips;
+	unsigned long wakee_flip_decay_ts;
 #endif
 	int on_rq;
 
@@ -1282,6 +1314,10 @@ struct task_struct {
 	const struct sched_class *sched_class;
 	struct sched_entity se;
 	struct sched_rt_entity rt;
+	struct ravg ravg;
+#ifdef CONFIG_CGROUP_SCHED
+	struct task_group *sched_task_group;
+#endif
 
 #ifdef CONFIG_PREEMPT_NOTIFIERS
 	/* list of struct preempt_notifier: */
@@ -1321,6 +1357,9 @@ struct task_struct {
 #endif
 
 	struct list_head tasks;
+#ifdef CONFIG_ANDROID_LMK_ADJ_RBTREE
+	struct rb_node adj_node;
+#endif
 #ifdef CONFIG_SMP
 	struct plist_node pushable_tasks;
 #endif
@@ -1668,6 +1707,14 @@ static inline struct pid *task_tgid(struct task_struct *task)
 	return task->group_leader->pids[PIDTYPE_PID].pid;
 }
 
+#ifdef CONFIG_ANDROID_LMK_ADJ_RBTREE
+extern void add_2_adj_tree(struct task_struct *task);
+extern void delete_from_adj_tree(struct task_struct *task);
+#else
+static inline void add_2_adj_tree(struct task_struct *task) { }
+static inline void delete_from_adj_tree(struct task_struct *task) { }
+#endif
+
 /*
  * Without tasklist or rcu lock it is not safe to dereference
  * the result of task_pgrp/task_session even if task == current,
@@ -1963,6 +2010,14 @@ static inline void set_wake_up_idle(bool enabled)
 		current->flags &= ~PF_WAKE_UP_IDLE;
 }
 
+#ifdef CONFIG_NO_HZ
+void calc_load_enter_idle(void);
+void calc_load_exit_idle(void);
+#else
+static inline void calc_load_enter_idle(void) { }
+static inline void calc_load_exit_idle(void) { }
+#endif /* CONFIG_NO_HZ */
+
 #ifndef CONFIG_CPUMASK_OFFSTACK
 static inline int set_cpus_allowed(struct task_struct *p, cpumask_t new_mask)
 {
@@ -2058,6 +2113,14 @@ extern unsigned int sysctl_sched_min_granularity;
 extern unsigned int sysctl_sched_wakeup_granularity;
 extern unsigned int sysctl_sched_child_runs_first;
 extern unsigned int sysctl_sched_wake_to_idle;
+extern unsigned int sysctl_sched_wakeup_load_threshold;
+#ifdef CONFIG_SCHED_DEBUG
+extern __read_mostly unsigned int sysctl_sched_yield_sleep_duration;
+extern __read_mostly int sysctl_sched_yield_sleep_threshold;
+#else
+extern const unsigned int sysctl_sched_yield_sleep_duration;
+extern const int sysctl_sched_yield_sleep_threshold;
+#endif
 
 enum sched_tunable_scaling {
 	SCHED_TUNABLESCALING_NONE,
@@ -2762,6 +2825,14 @@ static inline void set_task_cpu(struct task_struct *p, unsigned int cpu)
 #endif /* CONFIG_SMP */
 
 extern struct atomic_notifier_head migration_notifier_head;
+#ifdef CONFIG_ANDROID_BG_SCAN_MEM
+extern struct raw_notifier_head bgtsk_migration_notifier_head;
+#endif
+struct migration_notify_data {
+	int src_cpu;
+	int dest_cpu;
+	int load;
+};
 
 extern long sched_setaffinity(pid_t pid, const struct cpumask *new_mask);
 extern long sched_getaffinity(pid_t pid, struct cpumask *mask);
@@ -2788,7 +2859,7 @@ extern int sched_group_set_rt_period(struct task_group *tg,
 extern long sched_group_rt_period(struct task_group *tg);
 extern int sched_rt_can_attach(struct task_group *tg, struct task_struct *tsk);
 #endif
-#endif
+#endif /* CONFIG_CGROUP_SCHED */
 
 extern int task_can_switch_user(struct user_struct *up,
 					struct task_struct *tsk);

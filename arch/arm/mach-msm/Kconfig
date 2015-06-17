@@ -1897,6 +1897,13 @@ config MSM_DALRPC_TEST
 	help
 	  Exercises DAL RPC calls to QDSP6.
 
+config KRAIT_REGULATOR
+	bool "Krait PM Regulator"
+	depends on ARCH_MSM8974
+	default y
+	help
+	  Krait Regulator for MSM8974
+
 if CPU_FREQ_MSM
 
 config MSM_CPU_FREQ_SET_MIN_MAX
@@ -1917,6 +1924,16 @@ config MSM_CPU_FREQ_MIN
 	default 245760
 
 endif # CPU_FREQ_MSM
+ 
+config MSM_CPUFREQ_LIMITER
+	tristate "MSM CPU frequency limiter"
+	default y
+	help
+	  This driver limits MSM CPU frequency through sysfs file system.
+	  To compile this driver as a module, choose M here: the
+	  module will be called cpufreq_stats.
+
+	  If in doubt, say Y.
 
 config MSM_AVS_HW
 	bool "Enable Adaptive Voltage Scaling (AVS)"

@@ -46,6 +46,7 @@ struct wb_writeback_work {
 	unsigned int for_kupdate:1;
 	unsigned int range_cyclic:1;
 	unsigned int for_background:1;
+	unsigned int for_sync:1;	/* sync(2) WB_SYNC_ALL writeback */
 	enum wb_reason reason;		/* why was writeback initiated? */
 
 	struct list_head list;		/* pending work list */
@@ -410,9 +411,11 @@ writeback_single_inode(struct inode *inode, struct bdi_writeback *wb,
 	/*
 	 * Make sure to wait on the data before writing out the metadata.
 	 * This is important for filesystems that modify metadata on data
-	 * I/O completion.
+	 * I/O completion. We don't do it for sync(2) writeback because it has a
+	 * separate, external IO completion path and ->sync_fs for guaranteeing
+	 * inode metadata is written back correctly.
 	 */
-	if (wbc->sync_mode == WB_SYNC_ALL) {
+	if (wbc->sync_mode == WB_SYNC_ALL && !wbc->for_sync) {
 		int err = filemap_fdatawait(mapping);
 		if (ret == 0)
 			ret = err;
@@ -539,6 +542,7 @@ static long writeback_sb_inodes(struct super_block *sb,
 		.tagged_writepages	= work->tagged_writepages,
 		.for_kupdate		= work->for_kupdate,
 		.for_background		= work->for_background,
+		.for_sync		= work->for_sync,
 		.range_cyclic		= work->range_cyclic,
 		.range_start		= 0,
 		.range_end		= LLONG_MAX,
@@ -904,7 +908,10 @@ long wb_do_writeback(struct bdi_writeback *wb, int force_wait)
 		if (force_wait)
 			work->sync_mode = WB_SYNC_ALL;
 
-		trace_writeback_exec(bdi, work);
+		/* This trace causes an ICE in gcc4.7
+		 * For more information look into this commits message.
+		 * trace_writeback_exec(bdi, work);
+		 */
 
 		wrote += wb_writeback(wb, work);
 
@@ -947,7 +954,7 @@ int bdi_writeback_thread(void *data)
 	 */
 	set_user_nice(current, 0);
 
-	trace_writeback_thread_start(bdi);
+	/* trace_writeback_thread_start(bdi); */
 
 	while (!kthread_freezable_should_stop(NULL)) {
 		/*
@@ -958,7 +965,7 @@ int bdi_writeback_thread(void *data)
 
 		pages_written = wb_do_writeback(wb, 0);
 
-		trace_writeback_pages_written(pages_written);
+		/* trace_writeback_pages_written(pages_written); */
 
 		if (pages_written)
 			wb->last_active = jiffies;
@@ -985,7 +992,7 @@ int bdi_writeback_thread(void *data)
 	if (!list_empty(&bdi->work_list))
 		wb_do_writeback(wb, 1);
 
-	trace_writeback_thread_stop(bdi);
+	/* trace_writeback_thread_stop(bdi); */
 	return 0;
 }
 
@@ -1307,6 +1314,7 @@ void sync_inodes_sb(struct super_block *sb)
 		.range_cyclic	= 0,
 		.done		= &done,
 		.reason		= WB_REASON_SYNC,
+		.for_sync	= 1,
 	};
 
 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
