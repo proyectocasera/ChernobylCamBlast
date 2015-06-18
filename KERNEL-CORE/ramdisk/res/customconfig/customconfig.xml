@@ -11,8 +11,6 @@
 	<settingsPane description="Here you can tune the Maximum CPU Frequency per core, when set here no other APP or Service can set higher!!!" name="Maximum CPU Frequency">
 
 		<spinner description="Maximum CPU0 Speed. Here, you can change the maximum CPU0 frequency allowed. This depends on CPU-Tweaks (has to be enabled above)! (Default is 2265600 MHz)" name="Max CPU0 Frequency" action="cpu0_max_freq">
-			<spinnerItem name="3014400" value="3014400"/> 
-			<spinnerItem name="2880000" value="2880000"/> 
 			<spinnerItem name="2803200" value="2803200"/> 
 			<spinnerItem name="2726400" value="2726400"/> 
 			<spinnerItem name="2764800" value="2764800"/> 
@@ -40,8 +38,6 @@
 		</spinner>
 
 		<spinner description="Maximum CPU1 Speed. Here, you can change the maximum CPU1 frequency allowed. This depends on CPU-Tweaks (has to be enabled above)! (Default is 2265600 MHz)" name="Max CPU1 Frequency" action="cpu1_max_freq">
-			<spinnerItem name="3014400" value="3014400"/> 
-			<spinnerItem name="2880000" value="2880000"/> 
 			<spinnerItem name="2803200" value="2803200"/> 
 			<spinnerItem name="2726400" value="2726400"/> 
 			<spinnerItem name="2764800" value="2764800"/> 
@@ -69,8 +65,6 @@
 		</spinner>
 
 		<spinner description="Maximum CPU2 Speed. Here, you can change the maximum CPU2 frequency allowed. This depends on CPU-Tweaks (has to be enabled above)! (Default is 2265600 MHz)" name="Max CPU2 Frequency" action="cpu2_max_freq">
-			<spinnerItem name="3014400" value="3014400"/> 
-			<spinnerItem name="2880000" value="2880000"/> 
 			<spinnerItem name="2803200" value="2803200"/> 
 			<spinnerItem name="2726400" value="2726400"/> 
 			<spinnerItem name="2764800" value="2764800"/> 
@@ -98,8 +92,6 @@
 		</spinner>
 
 		<spinner description="Maximum CPU3 Speed. Here, you can change the maximum CPU3 frequency allowed. This depends on CPU-Tweaks (has to be enabled above)! (Default is 2265600 MHz)" name="Max CPU3 Frequency" action="cpu3_max_freq">
-			<spinnerItem name="3014400" value="3014400"/> 
-			<spinnerItem name="2880000" value="2880000"/> 
 			<spinnerItem name="2803200" value="2803200"/> 
 			<spinnerItem name="2726400" value="2726400"/> 
 			<spinnerItem name="2764800" value="2764800"/> 

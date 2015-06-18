@@ -56,6 +56,7 @@ IO_TWEAKS()
 			echo "0" > "$i"/queue/rotational;
 			echo "0" > "$i"/queue/iostats;
 			echo "2" > "$i"/queue/rq_affinity;
+			echo "2" > "$i"/queue/nomerges;
 		done;
 
 		# This controls how many requests may be allocated
@@ -211,7 +212,7 @@ CPU_CENTRAL_CONTROL()
 			if [ "$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq)" -ge "729600" ]; then
 				echo "$cpu0_min_freq" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq;
 			fi;
-			if [ "$suspend_max_freq" -lt "3014400" ]; then
+			if [ "$suspend_max_freq" -lt "2803200" ]; then
 				echo "$suspend_max_freq" > /sys/kernel/msm_cpufreq_limit/suspend_max_freq;
 			fi;
 		fi;
@@ -237,8 +238,8 @@ CPU_CENTRAL_CONTROL()
 
 HOTPLUG_CONTROL()
 {
-	if [ "$(pgrep -f "/system/bin/thermal-engine-hh" | wc -l)" -eq "1" ]; then
-		$BB renice -n -20 -p "$(pgrep -f "/system/bin/thermal-engine-hh")";
+	if [ "$(pgrep -f "/system/bin/thermal-engine" | wc -l)" -eq "1" ]; then
+		$BB renice -n -20 -p "$(pgrep -f "/system/bin/thermal-engine")";
 	fi;
 
 	if [ "$hotplug" == "default" ]; then
@@ -337,12 +338,65 @@ WORKQUEUE_CONTROL()
 	log -p i -t "$FILE_NAME" "*** WORKQUEUE_CONTROL ***: done";
 }
 
+INCALL_SPEAKER()
+{
+	local TELE_DATA=$(dumpsys telephony.registry | awk '/mCallState/ {print $1}');
+
+	local HEADPHONES_PLUG=$(dumpsys statusbar | grep headset | awk '/visible/ {print $6}');
+
+	GAIN_CHECK=0;
+
+	if [ "$generic_headphone_left" != "$incall_volume"]; then
+		GAIN_CHECK=1;
+	fi;
+
+	if [ "$generic_headphone_right" != "$incall_volume" ]; then
+		GAIN_CHECK=1;
+	fi;
+
+	if [ "$TELE_DATA" != "mCallState=0" ] && [ "$HEADPHONES_PLUG" == "visible=false" ] && [ "$GAIN_CHECK" -eq "1" ]; then
+		local INCALL_VOL=$incall_volume;
+		if [ "$INCALL_VOL" -lt "0" ]; then
+			local INCALL_VOL=$(($INCALL_VOL + 256))
+		fi;
+
+		echo "$INCALL_VOL $INCALL_VOL" > /sys/kernel/sound_control_3/lge_headphone_gain;
+
+		(
+			if [ "$(cat /sys/power/autosleep)" == "off" ]; then
+				sleep 10;
+				local TELE_DATA=$(dumpsys telephony.registry | awk '/mCallState/ {print $1}');
+				if [ "$TELE_DATA" == "mCallState=0" ]; then
+					if [ "$GAIN_CHECK" -eq "1" ] && [ -e /res/uci.sh ]; then
+						sh /res/uci.sh generic_headphone_left $generic_headphone_left;
+						sh /res/uci.sh generic_headphone_right $generic_headphone_right;
+						log -p i -t "$FILE_NAME" "*** HEAD_PHONES_GAIN: L $generic_headphone_left R $generic_headphone_right ***: done";
+					else
+						log -p i -t "$FILE_NAME" "*** HEAD_PHONES_GAIN: no change is needed ***: done";
+					fi;
+				fi;
+			fi;
+		)&
+
+		log -p i -t "$FILE_NAME" "*** IN_CALL_GAIN: $INCALL_VOL ***: done";
+	else
+		if [ -e /res/uci.sh ] && [ "$GAIN_CHECK" -eq "1" ]; then
+			sh /res/uci.sh generic_headphone_left $generic_headphone_left;
+			sh /res/uci.sh generic_headphone_right $generic_headphone_right;
+			log -p i -t "$FILE_NAME" "*** HEAD_PHONES_GAIN: L $generic_headphone_left R $generic_headphone_right ***: done";
+		else
+			log -p i -t "$FILE_NAME" "*** HEAD_PHONES_GAIN: no change is needed ***: done";
+		fi;
+	fi;
+}
+
 # ==============================================================
 # TWEAKS: if Screen-ON
 # ==============================================================
 AWAKE_MODE()
 {
 	CPU_CENTRAL_CONTROL "awake";
+	INCALL_SPEAKER;
 
 	if [ "$(cat /data/dori_cortex_sleep)" -eq "1" ]; then
 		IO_SCHEDULER "awake";
@@ -367,6 +421,7 @@ SLEEP_MODE()
 	CHARGER_STATE=$(cat /sys/class/power_supply/battery/charging_enabled);
 
 	CROND_SAFETY;
+	INCALL_SPEAKER;
 
 	if [ "$CHARGER_STATE" -eq "0" ]; then
 		IO_SCHEDULER "sleep";

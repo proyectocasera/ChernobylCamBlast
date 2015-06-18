@@ -3,13 +3,9 @@
 # Kernel Tuning by Dorimanx.
 
 BB=/sbin/busybox
-fstrim=/xbin/fstrim;
 
 # protect init from oom
 echo "-1000" > /proc/1/oom_score_adj;
-
-# set selinux to permissive
-echo "0" > /sys/fs/selinux/enforce;
 
 OPEN_RW()
 {
@@ -17,6 +13,11 @@ OPEN_RW()
 	$BB mount -o remount,rw /system;
 }
 OPEN_RW;
+
+# clean old modules from /system
+if [ ! -d /system/lib/modules ]; then
+        $BB mkdir /system/lib/modules;
+fi;
 
 # create init.d folder if missing
 if [ ! -d /system/etc/init.d ]; then
@@ -37,6 +38,7 @@ if [ ! -e /cpufreq ]; then
 	$BB ln -s /sys/kernel/alucard_hotplug/ /hotplugs/alucard;
 	$BB ln -s /sys/kernel/intelli_plug/ /hotplugs/intelli;
 	$BB ln -s /sys/module/msm_hotplug/ /hotplugs/msm_hotplug;
+	$BB ln -s /sys/devices/system/cpu/cpufreq/all_cpus/ /all_cpus;
 fi;
 
 CRITICAL_PERM_FIX()
@@ -55,42 +57,18 @@ CRITICAL_PERM_FIX;
 
 ONDEMAND_TUNING()
 {
-	echo "60" > /cpugov/ondemand/micro_freq_up_threshold;
+	echo "95" > /cpugov/ondemand/micro_freq_up_threshold;
 	echo "10" > /cpugov/ondemand/down_differential;
 	echo "3" > /cpugov/ondemand/down_differential_multi_core;
-	echo "4" > /cpugov/ondemand/sampling_down_factor;
-	echo "60" > /cpugov/ondemand/up_threshold;
-	echo "2265600" > /cpugov/ondemand/sync_freq;
-	echo "1958400" > /cpugov/ondemand/optimal_freq;
-	echo "2265600" > /cpugov/ondemand/optimal_max_freq;
+	echo "1" > /cpugov/ondemand/sampling_down_factor;
+	echo "70" > /cpugov/ondemand/up_threshold;
+	echo "1728000" > /cpugov/ondemand/sync_freq;
+	echo "1574400" > /cpugov/ondemand/optimal_freq;
+	echo "1728000" > /cpugov/ondemand/optimal_max_freq;
 	echo "14" > /cpugov/ondemand/middle_grid_step;
 	echo "20" > /cpugov/ondemand/high_grid_step;
-	echo "50" > /cpugov/ondemand/middle_grid_load;
-	echo "60" > /cpugov/ondemand/high_grid_load;
-}
-
-STOCKDEMAND_TUNING()
-{
-	echo "10" > /cpugov/stockdemand/down_differential;
-	echo "0" > /cpugov/stockdemand/ignore_nice_load;
-	echo "1" > /cpugov/stockdemand/io_is_busy;
-	echo "1958400" > /cpugov/stockdemand/optimal_freq;
-	echo "0" > /cpugov/stockdemand/powersave_bias;
-	echo "4" > /cpugov/stockdemand/sampling_down_factor;
-	echo "40000" > /cpugov/stockdemand/sampling_rate;
-	echo "2265600" > /cpugov/stockdemand/sync_freq;
-	echo "60" > /cpugov/stockdemand/up_threshold;
-	echo "60" > /cpugov/stockdemand/up_threshold_any_cpu_load;
-	echo "50" > /cpugov/stockdemand/up_threshold_multi_core;
-}
-
-FSTRIM_OPTIMIZE()
-{
-	$fstrim -v /data > /dev/null
-	sleep 4
-	$fstrim -v /cache > /dev/null
-	sleep 4
-	$fstrim -v /system > /dev/null
+	echo "65" > /cpugov/ondemand/middle_grid_load;
+	echo "89" > /cpugov/ondemand/high_grid_load;
 }
 
 # oom and mem perm fix
@@ -109,6 +87,7 @@ $BB chmod 666 /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
 $BB chmod 666 /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
 $BB chmod 444 /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
 $BB chmod 444 /sys/devices/system/cpu/cpu0/cpufreq/stats/*
+$BB chmod 666 /sys/devices/system/cpu/cpufreq/all_cpus/*
 $BB chmod 666 /sys/devices/system/cpu/cpu1/online
 $BB chmod 666 /sys/devices/system/cpu/cpu2/online
 $BB chmod 666 /sys/devices/system/cpu/cpu3/online
@@ -182,6 +161,11 @@ $BB chmod -R 0777 /data/.dori/;
 read_defaults;
 read_config;
 
+# Load parameters for Synapse
+DEBUG=/data/.dori/;
+BUSYBOX_VER=$(busybox | grep "BusyBox v" | cut -c0-15);
+echo "$BUSYBOX_VER" > $DEBUG/busybox_ver;
+
 # start CORTEX by tree root, so it's will not be terminated.
 sed -i "s/cortexbrain_background_process=[0-1]*/cortexbrain_background_process=1/g" /sbin/ext/cortexbrain-tune.sh;
 if [ "$(pgrep -f "cortexbrain-tune.sh" | wc -l)" -eq "0" ]; then
@@ -198,6 +182,8 @@ if [ ! -e /data/crontab/custom_jobs ]; then
 fi;
 
 if [ "$stweaks_boot_control" == "yes" ]; then
+	# apply Synapse monitor
+	$BB sh /res/synapse/uci reset;
 	# apply STweaks settings
 	$BB sh /res/uci_boot.sh apply;
 	$BB mv /res/uci_boot.sh /res/uci.sh;
@@ -205,19 +191,48 @@ else
 	$BB mv /res/uci_boot.sh /res/uci.sh;
 fi;
 
+######################################
+# Loading Modules
+######################################
+MODULES_LOAD()
+{
+	# order of modules load is important
+
+	if [ "$cifs_module" == "on" ]; then
+		if [ -e /system/lib/modules/cifs.ko ]; then
+			$BB insmod /system/lib/modules/cifs.ko;
+		else
+			$BB insmod /lib/modules/cifs.ko;
+		fi;
+	else
+		echo "no user modules loaded";
+	fi;
+}
+
 # enable kmem interface for everyone by GM
 echo "0" > /proc/sys/kernel/kptr_restrict;
 
-OPEN_RW;
+# disable debugging on some modules
+if [ "$logger" -ge "1" ]; then
+	echo "N" > /sys/module/kernel/parameters/initcall_debug;
+#	echo "0" > /sys/module/alarm/parameters/debug_mask;
+#	echo "0" > /sys/module/alarm_dev/parameters/debug_mask;
+#	echo "0" > /sys/module/binder/parameters/debug_mask;
+	echo "0" > /sys/module/xt_qtaguid/parameters/debug_mask;
+#	echo "0" > /sys/kernel/debug/clk/debug_suspend;
+#	echo "0" > /sys/kernel/debug/msm_vidc/debug_level;
+#	echo "0" > /sys/module/ipc_router/parameters/debug_mask;
+#	echo "0" > /sys/module/msm_serial_hs/parameters/debug_mask;
+#	echo "0" > /sys/module/msm_show_resume_irq/parameters/debug_mask;
+#	echo "0" > /sys/module/mpm_of/parameters/debug_mask;
+#	echo "0" > /sys/module/msm_pm/parameters/debug_mask;
+#	echo "0" > /sys/module/smp2p/parameters/debug_mask;
+fi;
 
-# set fstrim optimize
-FSTRIM_OPTIMIZE;
+OPEN_RW;
 
 # set ondemand tuning.
 ONDEMAND_TUNING;
-
-# set stockdemand tuning.
-STOCKDEMAND_TUNING
 
 # Turn off CORE CONTROL, to boot on all cores!
 $BB chmod 666 /sys/module/msm_thermal/core_control/*
@@ -260,8 +275,8 @@ if [ "$(cat /sys/module/powersuspend/parameters/sleep_state)" -eq "0" ]; then
 fi;
 
 # tune I/O controls to boost I/O performance
-echo "1" > /sys/devices/msm_sdcc.1/mmc_host/mmc0/mmc0:0001/block/mmcblk0/queue/nomerges;
-echo "1" > /sys/devices/msm_sdcc.1/mmc_host/mmc0/mmc0:0001/block/mmcblk0/mmcblk0rpmb/queue/nomerges;
+echo "2" > /sys/devices/msm_sdcc.1/mmc_host/mmc0/mmc0:0001/block/mmcblk0/queue/nomerges;
+echo "2" > /sys/devices/msm_sdcc.1/mmc_host/mmc0/mmc0:0001/block/mmcblk0/mmcblk0rpmb/queue/nomerges;
 echo "2" > /sys/devices/msm_sdcc.1/mmc_host/mmc0/mmc0:0001/block/mmcblk0/queue/rq_affinity;
 echo "2" > /sys/devices/msm_sdcc.1/mmc_host/mmc0/mmc0:0001/block/mmcblk0/mmcblk0rpmb/queue/rq_affinity;
 
@@ -279,6 +294,8 @@ $BB mount -o remount,ro /system;
 	if [ "$CHARGER_STATE" -eq "1" ] && [ "$adb_selector" -eq "1" ]; then
 		stop adbd
 		echo "0" > /sys/class/android_usb/android0/enable;
+		echo "633E" > /sys/class/android_usb/android0/idProduct;
+		echo "mtp:mtp,acm,diag,adb" > /sys/class/android_usb/android0/functions;
 		echo "1" > /sys/class/android_usb/android0/enable;
 		start adbd
 	fi;
