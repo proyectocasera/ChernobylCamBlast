@@ -38,6 +38,7 @@
 int cpufreq_register_notifier(struct notifier_block *nb, unsigned int list);
 int cpufreq_unregister_notifier(struct notifier_block *nb, unsigned int list);
 extern void disable_cpufreq(void);
+u64 get_cpu_idle_time(unsigned int cpu, u64 *wall, int io_busy);
 extern unsigned int cpufreq_quick_get_util(unsigned int cpu);
 
 /*
@@ -301,6 +302,13 @@ static inline void cpufreq_verify_within_limits(struct cpufreq_policy *policy, u
 	return;
 }
 
+static inline void
+cpufreq_verify_within_cpu_limits(struct cpufreq_policy *policy)
+{
+	cpufreq_verify_within_limits(policy, policy->cpuinfo.min_freq,
+			policy->cpuinfo.max_freq);
+}
+
 struct freq_attr {
 	struct attribute attr;
 	ssize_t (*show)(struct cpufreq_policy *, char *);
@@ -370,6 +378,11 @@ static inline unsigned int cpufreq_quick_get_max(unsigned int cpu)
 }
 #endif
 
+enum {
+	BOOT_CPU = 0,
+};
+
+#define MAX_FREQ_LIMIT 2265600
 
 /*********************************************************************
  *                       CPUFREQ DEFAULT GOVERNOR                    *

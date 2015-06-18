@@ -2538,9 +2538,17 @@ config MSM_RUN_QUEUE_STATS
          in user mode, called MPDecision will be using this data to decide
          on when to switch off/on the other cores.
 
+config MSM_RUN_QUEUE_STATS_BE_CONSERVATIVE
+	bool "Use a more conservative computation for RQ Stats"
+	depends on MSM_RUN_QUEUE_STATS
+	default n
+	help
+	  Enable more conservative computation of load and size of the run
+	  queue.
+
 config MSM_STANDALONE_POWER_COLLAPSE
-       bool "Enable standalone power collapse"
-       default n
+        bool "Enable standalone power collapse"
+        default n
 
 config MSM_GSBI9_UART
 	bool "Enable GSBI9 UART device"
@@ -2917,6 +2925,26 @@ config MSM_DCVS
 	  The DCVS manager allows idle driver to feed the idle information to the
 	  algorithm and the algorithm returns a frequency for the core which is
 	  passed to the frequency change driver.
+
+config MSM_HOTPLUG
+	bool "MSM hotplug driver"
+	depends on HOTPLUG_CPU
+	default y
+	help
+	  The MSM hotplug driver controls on-/offlining of additional cores based
+	  on current cpu load.
+
+config INTELLI_HOTPLUG
+	bool "Enable intelli-plug cpu hotplug driver"
+	default y
+	help
+	  Generic Intelli-plug cpu hotplug driver for ARM SOCs
+
+config ALUCARD_HOTPLUG
+	bool "Enable alucard-hotplug cpu hotplug driver"
+	default y
+	help
+	  Generic Alucard-hotplug cpu hotplug driver for ARM SOCs
 
 config MSM_CPR
 	tristate "Use MSM CPR in S/W mode"
