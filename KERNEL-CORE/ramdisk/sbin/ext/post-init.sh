@@ -210,24 +210,6 @@ else
 	$BB mv /res/uci_boot.sh /res/uci.sh;
 fi;
 
-######################################
-# Loading Modules
-######################################
-MODULES_LOAD()
-{
-	# order of modules load is important
-
-	if [ "$cifs_module" == "on" ]; then
-		if [ -e /system/lib/modules/cifs.ko ]; then
-			$BB insmod /system/lib/modules/cifs.ko;
-		else
-			$BB insmod /lib/modules/cifs.ko;
-		fi;
-	else
-		echo "no user modules loaded";
-	fi;
-}
-
 # enable kmem interface for everyone by GM
 echo "0" > /proc/sys/kernel/kptr_restrict;
 
