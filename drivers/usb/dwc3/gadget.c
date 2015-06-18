@@ -2798,6 +2798,9 @@ int __devinit dwc3_gadget_init(struct dwc3 *dwc)
 			break;
 	}
 	dwc->gadget.ops			= &dwc3_gadget_ops;
+	/* switch to DTS config as SPEED SUPER
+ 	dwc->gadget.max_speed		= USB_SPEED_SUPER;
+	*/
 	dwc->gadget.speed		= USB_SPEED_UNKNOWN;
 	dwc->gadget.dev.parent		= dwc->dev;
 	dwc->gadget.sg_supported	= true;
