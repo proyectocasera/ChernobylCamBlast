@@ -1,0 +1,12 @@
+import /init.superuser.rc
+
+on property:sys.boot_completed=1
+    start postinit
+
+service postinit /sbin/ext/post-init.sh
+    class late_start
+    user root
+    group root
+    disabled
+    oneshot
+
