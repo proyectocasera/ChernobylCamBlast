@@ -34,6 +34,21 @@ struct msm_thermal_data {
 	int32_t vdd_rstr_temp_hyst_degC;
 	int32_t psm_temp_degC;
 	int32_t psm_temp_hyst_degC;
+	int32_t ocr_temp_degC;
+	int32_t ocr_temp_hyst_degC;
+	int32_t therm_reset_temp_degC;
+};
+
+struct msm_thermal_data_intelli {
+	uint32_t sensor_id;
+	uint32_t poll_ms;
+	int32_t limit_temp_degC;
+	int32_t temp_hysteresis_degC;
+	uint32_t freq_step;
+	uint32_t freq_control_mask;
+	int32_t core_limit_temp_degC;
+	int32_t core_temp_hysteresis_degC;
+	uint32_t core_control_mask;
 };
 
 #ifdef CONFIG_THERMAL_MONITOR
