@@ -531,7 +531,7 @@ static int apply_max_freq_cpus_limit(unsigned int src_freq)
 static ssize_t store_scaling_max_freq
 (struct cpufreq_policy *policy, const char *buf, size_t count)
 {
-	unsigned int ret, cpu;
+	unsigned int ret;
 #if defined(CONFIG_MULTI_CPU_POLICY_LIMIT) && \
 		defined(CONFIG_MSM_CPUFREQ_LIMITER)
 	unsigned int limited_cpu_freq;
