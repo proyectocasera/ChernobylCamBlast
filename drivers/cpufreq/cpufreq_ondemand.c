@@ -35,20 +35,20 @@
 #define DEF_FREQUENCY_DOWN_DIFFERENTIAL		(10)
 #define MICRO_FREQUENCY_DOWN_DIFFERENTIAL	(3)
 
-#define DEF_FREQUENCY_UP_THRESHOLD		(70)
-#define MICRO_FREQUENCY_UP_THRESHOLD		(95)
+#define DEF_FREQUENCY_UP_THRESHOLD		(60)
+#define MICRO_FREQUENCY_UP_THRESHOLD		(60)
 
 #define DEF_MIDDLE_GRID_STEP			(14)
 #define DEF_HIGH_GRID_STEP			(20)
-#define DEF_MIDDLE_GRID_LOAD			(65)
-#define DEF_HIGH_GRID_LOAD			(89)
+#define DEF_MIDDLE_GRID_LOAD			(50)
+#define DEF_HIGH_GRID_LOAD			(60)
 
 #define DEF_SAMPLING_DOWN_FACTOR		(1)
-#define DEF_SAMPLING_RATE			(50000)
+#define DEF_SAMPLING_RATE			(40000)
 
-#define DEF_SYNC_FREQUENCY			(1728000)
-#define DEF_OPTIMAL_FREQUENCY			(1574400)
-#define DEF_OPTIMAL_MAX_FREQ			(1728000)
+#define DEF_SYNC_FREQUENCY			(2265600)
+#define DEF_OPTIMAL_FREQUENCY			(1958400)
+#define DEF_OPTIMAL_MAX_FREQ			(2265600)
 
 /* Kernel tunabble controls */
 #define MICRO_FREQUENCY_MIN_SAMPLE_RATE		(10000)
@@ -164,7 +164,7 @@ static struct dbs_tuners {
 	.optimal_freq = DEF_OPTIMAL_FREQUENCY,
 	.optimal_max_freq = DEF_OPTIMAL_MAX_FREQ,
 	.input_boost = 0,
-	.io_is_busy = 0,
+	.io_is_busy = 1,
 	.sampling_rate = DEF_SAMPLING_RATE,
 };
 #if defined(CONFIG_MACH_MSM8974_B1_KR) || defined(CONFIG_MACH_MSM8974_B1W)
