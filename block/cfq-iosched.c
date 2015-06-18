@@ -22,23 +22,23 @@
  */
 /* max queue in one round of service */
 static const int cfq_quantum = 8;
-static const int cfq_fifo_expire[2] = { HZ / 4, HZ / 8 };
+static const int cfq_fifo_expire[2] = { 100 / 4, 100 / 8 };
 /* maximum backwards seek, in KiB */
 static const int cfq_back_max = 16 * 1024;
 /* penalty of a backwards seek */
 static const int cfq_back_penalty = 2;
-static const int cfq_slice_sync = HZ / 10;
-static int cfq_slice_async = HZ / 25;
+static const int cfq_slice_sync = 100 / 10;
+static int cfq_slice_async = 100 / 25;
 static const int cfq_slice_async_rq = 2;
-static int cfq_slice_idle = HZ / 125;
-static int cfq_group_idle = HZ / 125;
-static const int cfq_target_latency = HZ * 3/10; /* 300 ms */
+static int cfq_slice_idle = 100 / 125;
+static int cfq_group_idle = 100 / 125;
+static const int cfq_target_latency = 100 * 3/10; /* 300 ms */
 static const int cfq_hist_divisor = 4;
 
 /*
  * offset from end of service tree
  */
-#define CFQ_IDLE_DELAY		(HZ / 5)
+#define CFQ_IDLE_DELAY		(100 / 5)
 
 /*
  * below this threshold, we consider thinktime immediate
@@ -238,9 +238,6 @@ struct cfq_data {
 	enum wl_type_t serving_type;
 	unsigned long workload_expires;
 	struct cfq_group *serving_group;
-
-	unsigned int nr_urgent_pending;
-	unsigned int nr_urgent_in_flight;
 
 	/*
 	 * Each priority tree is sorted by next_request position.  These
@@ -1326,7 +1323,7 @@ static void cfq_service_tree_add(struct cfq_data *cfqd, struct cfq_queue *cfqq,
 		rb_key -= cfqq->slice_resid;
 		cfqq->slice_resid = 0;
 	} else {
-		rb_key = -HZ;
+		rb_key = -100;
 		__cfqq = cfq_rb_first(service_tree);
 		rb_key += __cfqq ? __cfqq->rb_key : jiffies;
 	}
@@ -2093,14 +2090,6 @@ static void cfq_dispatch_insert(struct request_queue *q, struct request *rq)
 	cfqq->dispatched++;
 	(RQ_CFQG(rq))->dispatched++;
 	elv_dispatch_sort(q, rq);
-
-	if (rq->cmd_flags & REQ_URGENT) {
-		if (!cfqd->nr_urgent_pending)
-			WARN_ON(1);
-		else
-			cfqd->nr_urgent_pending--;
-		cfqd->nr_urgent_in_flight++;
-	}
 
 	cfqd->rq_in_flight[cfq_cfqq_sync(cfqq)]++;
 	cfqq->nr_sectors += blk_rq_sectors(rq);
@@ -3205,69 +3194,6 @@ cfq_rq_enqueued(struct cfq_data *cfqd, struct cfq_queue *cfqq,
 	}
 }
 
-/*
- * Called when a request (rq) is reinserted (to cfqq). Check if there's
- * something we should do about it
- */
-static void
-cfq_rq_requeued(struct cfq_data *cfqd, struct cfq_queue *cfqq,
-		struct request *rq)
-{
-	struct cfq_io_cq *cic = RQ_CIC(rq);
-
-	cfqd->rq_queued++;
-	if (rq->cmd_flags & REQ_PRIO)
-		cfqq->prio_pending++;
-
-	cfqq->dispatched--;
-	(RQ_CFQG(rq))->dispatched--;
-
-	cfqd->rq_in_flight[cfq_cfqq_sync(cfqq)]--;
-
-	cfq_update_io_thinktime(cfqd, cfqq, cic);
-	cfq_update_io_seektime(cfqd, cfqq, rq);
-	cfq_update_idle_window(cfqd, cfqq, cic);
-
-	cfqq->last_request_pos = blk_rq_pos(rq) + blk_rq_sectors(rq);
-
-	if (cfqq == cfqd->active_queue) {
-		if (cfq_cfqq_wait_request(cfqq)) {
-			if (blk_rq_bytes(rq) > PAGE_CACHE_SIZE ||
-			    cfqd->busy_queues > 1) {
-				cfq_del_timer(cfqd, cfqq);
-				cfq_clear_cfqq_wait_request(cfqq);
-			} else {
-				cfq_blkiocg_update_idle_time_stats(
-						&cfqq->cfqg->blkg);
-				cfq_mark_cfqq_must_dispatch(cfqq);
-			}
-		}
-	} else if (cfq_should_preempt(cfqd, cfqq, rq)) {
-		cfq_preempt_queue(cfqd, cfqq);
-	}
-}
-
-static int cfq_reinsert_request(struct request_queue *q, struct request *rq)
-{
-	struct cfq_data *cfqd = q->elevator->elevator_data;
-	struct cfq_queue *cfqq = RQ_CFQQ(rq);
-
-	if (!cfqq || cfqq->cfqd != cfqd)
-		return -EIO;
-
-	cfq_log_cfqq(cfqd, cfqq, "re-insert_request");
-	list_add(&rq->queuelist, &cfqq->fifo);
-	cfq_add_rq_rb(rq);
-
-	cfq_rq_requeued(cfqd, cfqq, rq);
-	if (rq->cmd_flags & REQ_URGENT) {
-			if (cfqd->nr_urgent_in_flight)
-				cfqd->nr_urgent_in_flight--;
-			cfqd->nr_urgent_pending++;
-	}
-	return 0;
-}
-
 static void cfq_insert_request(struct request_queue *q, struct request *rq)
 {
 	struct cfq_data *cfqd = q->elevator->elevator_data;
@@ -3282,45 +3208,7 @@ static void cfq_insert_request(struct request_queue *q, struct request *rq)
 	cfq_blkiocg_update_io_add_stats(&(RQ_CFQG(rq))->blkg,
 			&cfqd->serving_group->blkg, rq_data_dir(rq),
 			rq_is_sync(rq));
-
 	cfq_rq_enqueued(cfqd, cfqq, rq);
-
-	if (rq->cmd_flags & REQ_URGENT) {
-		WARN_ON(1);
-		blk_dump_rq_flags(rq, "");
-		rq->cmd_flags &= ~REQ_URGENT;
-	}
-
-	/* Request is considered URGENT if:
-	 * 1. The queue being served is of a lower IO priority then the new
-	 *    request
-	 * OR:
-	 * 2. The workload being performed is ASYNC
-	 * Only READ requests may be considered as URGENT
-	 */
-	if ((cfqd->active_queue &&
-		 cfqq->ioprio_class < cfqd->active_queue->ioprio_class) ||
-		(cfqd->serving_type == ASYNC_WORKLOAD &&
-		 rq_data_dir(rq) == READ)) {
-		rq->cmd_flags |= REQ_URGENT;
-		cfqd->nr_urgent_pending++;
-	}
-}
-
-
-/**
- * cfq_urgent_pending() - Return TRUE if there is an urgent
- *			  request on scheduler
- * @q:	requests queue
- */
-static bool cfq_urgent_pending(struct request_queue *q)
-{
-	struct cfq_data *cfqd = q->elevator->elevator_data;
-
-	if (cfqd->nr_urgent_pending && !cfqd->nr_urgent_in_flight)
-		return true;
-
-	return false;
 }
 
 /*
@@ -3403,14 +3291,6 @@ static void cfq_completed_request(struct request_queue *q, struct request *rq)
 	struct cfq_data *cfqd = cfqq->cfqd;
 	const int sync = rq_is_sync(rq);
 	unsigned long now;
-
-	if (rq->cmd_flags & REQ_URGENT) {
-		if (!cfqd->nr_urgent_in_flight)
-			WARN_ON(1);
-		else
-			cfqd->nr_urgent_in_flight--;
-		rq->cmd_flags &= ~REQ_URGENT;
-	}
 
 	now = jiffies;
 	cfq_log_cfqq(cfqd, cfqq, "complete rqnoidle %d",
@@ -3872,7 +3752,7 @@ static void *cfq_init_queue(struct request_queue *q)
 	 * we optimistically start assuming sync ops weren't delayed in last
 	 * second, in order to have larger depth for async operations.
 	 */
-	cfqd->last_delayed_sync = jiffies - HZ;
+	cfqd->last_delayed_sync = jiffies - 100;
 	return cfqd;
 }
 
@@ -3979,8 +3859,6 @@ static struct elevator_type iosched_cfq = {
 		.elevator_bio_merged_fn =	cfq_bio_merged,
 		.elevator_dispatch_fn =		cfq_dispatch_requests,
 		.elevator_add_req_fn =		cfq_insert_request,
-		.elevator_reinsert_req_fn	= cfq_reinsert_request,
-		.elevator_is_urgent_fn		= cfq_urgent_pending,
 		.elevator_activate_req_fn =	cfq_activate_request,
 		.elevator_deactivate_req_fn =	cfq_deactivate_request,
 		.elevator_completed_req_fn =	cfq_completed_request,
