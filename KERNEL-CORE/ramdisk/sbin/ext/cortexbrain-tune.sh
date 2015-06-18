@@ -238,8 +238,8 @@ CPU_CENTRAL_CONTROL()
 
 HOTPLUG_CONTROL()
 {
-	if [ "$(pgrep -f "/system/bin/thermal-engine" | wc -l)" -eq "1" ]; then
-		$BB renice -n -20 -p "$(pgrep -f "/system/bin/thermal-engine")";
+	if [ "$(pgrep -f "/system/bin/thermal-engine-hh" | wc -l)" -eq "1" ]; then
+		$BB renice -n -20 -p "$(pgrep -f "/system/bin/thermal-engine-hh")";
 	fi;
 
 	if [ "$hotplug" == "default" ]; then
