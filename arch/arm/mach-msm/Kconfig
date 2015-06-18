@@ -285,6 +285,8 @@ config ARCH_MSM8974
 	select MSM_LPM_TEST
 	select MSM_RPM_LOG
 	select ARCH_WANT_KMAP_ATOMIC_FLUSH
+	select KRAIT_REGULATOR
+	select MSM_CPUFREQ_LIMITER
 
 config ARCH_APQ8084
 	bool "APQ8084"
@@ -1904,6 +1906,16 @@ config KRAIT_REGULATOR
 	help
 	  Krait Regulator for MSM8974
 
+config MSM_CPUFREQ_LIMITER
+	tristate "MSM CPU frequency limiter"
+	default y
+	help
+	  This driver limits MSM CPU frequency through sysfs file system.
+	  To compile this driver as a module, choose M here: the
+	  module will be called cpufreq_stats.
+
+	  If in doubt, say Y.
+
 if CPU_FREQ_MSM
 
 config MSM_CPU_FREQ_SET_MIN_MAX
@@ -1924,16 +1936,6 @@ config MSM_CPU_FREQ_MIN
 	default 245760
 
 endif # CPU_FREQ_MSM
- 
-config MSM_CPUFREQ_LIMITER
-	tristate "MSM CPU frequency limiter"
-	default y
-	help
-	  This driver limits MSM CPU frequency through sysfs file system.
-	  To compile this driver as a module, choose M here: the
-	  module will be called cpufreq_stats.
-
-	  If in doubt, say Y.
 
 config MSM_AVS_HW
 	bool "Enable Adaptive Voltage Scaling (AVS)"
