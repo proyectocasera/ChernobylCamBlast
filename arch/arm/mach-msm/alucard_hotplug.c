@@ -70,7 +70,7 @@ static struct hotplug_tuners {
 #endif
 	.min_cpus_online = 1,
 	.maxcoreslimit = NR_CPUS,
-	.maxcoreslimit_sleep = 2,
+	.maxcoreslimit_sleep = 3,
 	.hp_io_is_busy = 0,
 	.hotplug_suspend = 0,
 	.suspended = false,
@@ -405,7 +405,7 @@ static int alucard_hotplug_callback(struct notifier_block *nb,
 	struct hotplug_cpuinfo *pcpu_info;
 	unsigned int cpu = (int)data;
 
-	switch (action & (~CPU_TASKS_FROZEN)) {
+	switch (action) {
 	case CPU_ONLINE:
 		pcpu_info = &per_cpu(od_hotplug_cpuinfo, cpu);
 		pcpu_info->prev_cpu_idle = get_cpu_idle_time(cpu,
