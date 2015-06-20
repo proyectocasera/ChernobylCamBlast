@@ -27,7 +27,7 @@ DECLARE_EVENT_CLASS(workqueue_work,
 /**
  * workqueue_queue_work - called when a work gets queued
  * @req_cpu:	the requested cpu
- * @cwq:	pointer to struct cpu_workqueue_struct
+ * @pwq:	pointer to struct pool_workqueue
  * @work:	pointer to struct work_struct
  *
  * This event occurs when a work is queued immediately or once a

@@ -42,8 +42,8 @@
 #include <linux/lockdep.h>
 #include <linux/idr.h>
 #include <linux/bug.h>
-#include <linux/hashtable.h>
 #include <linux/moduleparam.h>
+#include <linux/hashtable.h>
 
 #include "workqueue_internal.h"
 
@@ -121,6 +121,8 @@ enum {
  *
  * W: workqueue_lock protected.
  */
+
+/* struct worker is defined in workqueue_internal.h */
 
 struct worker_pool {
 	spinlock_t		lock;		/* the pool lock */
@@ -1156,7 +1158,6 @@ static void insert_work(struct pool_workqueue *pwq, struct work_struct *work,
 
 	/* we own @work, set data and link */
 	set_work_pwq(work, pwq, extra_flags);
-
 	list_add_tail(&work->entry, head);
 
 	/*
@@ -1275,6 +1276,7 @@ static void __queue_work(unsigned int cpu, struct workqueue_struct *wq,
 /**
  * queue_work_on - queue work on specific cpu
  * @cpu: CPU number to execute work on
+ * @wq: workqueue to use
  * @work: work to queue
  *
  * Returns %false if @work was already on a queue, %true otherwise.
@@ -1420,7 +1422,7 @@ EXPORT_SYMBOL_GPL(queue_delayed_work);
  * Returns %false if @dwork was idle and queued, %true if @dwork was
  * pending and its timer was modified.
  *
- * This function is safe to call from any context including IRQ handler
+ * This function is safe to call from any context including IRQ handler.
  * See try_to_grab_pending() for details.
  */
 bool mod_delayed_work_on(int cpu, struct workqueue_struct *wq,
@@ -2009,7 +2011,7 @@ static bool maybe_destroy_workers(struct worker_pool *pool)
  * manage_workers - manage worker pool
  * @worker: self
  *
- * Assume the manager role and manage pool worker pool @worker belongs
+ * Assume the manager role and manage the worker pool @worker belongs
  * to.  At any given time, there can be only zero or one manager per
  * pool.  The exclusion is handled automatically by this function.
  *
@@ -3516,7 +3518,7 @@ static void wq_unbind_fn(struct work_struct *work)
  * Workqueues should be brought up before normal priority CPU notifiers.
  * This will be registered high priority CPU notifier.
  */
-static int workqueue_cpu_up_callback(struct notifier_block *nfb,
+static int __cpuinit workqueue_cpu_up_callback(struct notifier_block *nfb,
 					       unsigned long action,
 					       void *hcpu)
 {
@@ -3562,7 +3564,7 @@ static int workqueue_cpu_up_callback(struct notifier_block *nfb,
  * Workqueues should be brought down after normal priority CPU notifiers.
  * This will be registered as low priority CPU notifier.
  */
-static int workqueue_cpu_down_callback(struct notifier_block *nfb,
+static int __cpuinit workqueue_cpu_down_callback(struct notifier_block *nfb,
 						 unsigned long action,
 						 void *hcpu)
 {
@@ -3701,7 +3703,7 @@ bool freeze_workqueues_busy(void)
 			if (cpu < CONFIG_NR_CPUS)
 				pwq = get_pwq(cpu, wq);
 			else
-				continue; 
+				continue;
 
 			if (!pwq || !(wq->flags & WQ_FREEZABLE))
 				continue;
@@ -3758,7 +3760,6 @@ void thaw_workqueues(void)
 			}
 
 			wake_up_worker(pool);
-
 
 			spin_unlock_irq(&pool->lock);
 		}
